@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "common-tags": "^1.8.0",
+    "discord.js": "discordjs/discord.js",
+    "moment": "^2.22.2",
+    "node-fetch": "^2.3.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "rethinkdbdash": "^2.3.31"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "name": "voyager",
+  "version": "1.0.0",
+  "description": "Multi-purpose Discord automaton",
+  "main": "index.js",
+  "author": "Nolan",
+  "license": "MIT",
+  "private": true
+}

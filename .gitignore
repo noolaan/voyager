@@ -1,0 +1,4 @@
+.DS_Store
+options.json
+node_modules
+rethinkdb_data
