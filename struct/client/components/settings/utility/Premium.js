@@ -17,7 +17,7 @@ class Premium extends Setting {
     }
 
     async parse(message, args) {
-        if(args === this.default) return await super.reset(message);
+        if(args === this.default) return await super.reset(message.guild.id);
         const bool = this.client._resolver.boolean(args);
         if(bool === undefined) {
             return {
@@ -29,17 +29,17 @@ class Premium extends Setting {
         return { error: false, result: bool };
     }
 
-    fields(index) {
+    fields(guild) {
         return [
             {
                 name: '》Status',
-                value: `${this.current(index) ? `${emojis.enabled} Enabled` : `${emojis.disabled} Disabled`}`
+                value: `${this.current(guild) ? `${emojis.enabled} Enabled` : `${emojis.disabled} Disabled`}`
             }
         ];
     }
 
-    current(index) {
-        return index.value;
+    current(guild) {
+        return guild._getSetting(this.index).value;
     }
 
 }

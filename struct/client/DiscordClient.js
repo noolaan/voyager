@@ -5,10 +5,11 @@ const Logger = require('./Logger.js');
 const Registry = require('./Registry.js');
 const Dispatcher = require('./Dispatcher.js');
 const Resolver = require('./Resolver.js');
+const WebhookManager = require('./WebhookManager.js');
 const { Command, Observer, Setting, Inhibitor } = require('./interfaces/');
 
 const StorageManager = require('../storage/StorageManager.js');
-const { Guilds, Users, Attachments } = require('../storage/tables/');
+const { Guilds, Users, Attachments, Infractions } = require('../storage/tables/');
 
 const ModerationManager = require('../moderation/ModerationManager.js');
 
@@ -27,6 +28,7 @@ class DiscordClient extends Client {
         this.registry = new Registry(this);
         this.dispatcher = new Dispatcher(this);
 
+        this.webhookManager = new WebhookManager(this);
         this.storageManager = new StorageManager(this, {
             name: 'voyager'
         });
@@ -54,7 +56,8 @@ class DiscordClient extends Client {
         await this.storageManager.createTables([
             ['guilds', Guilds],
             ['users', Users],
-            ['attachments', Attachments]
+            ['attachments', Attachments],
+            ['infractions', Infractions]
         ]);
 
         await this.dispatcher.dispatch();

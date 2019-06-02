@@ -34,12 +34,16 @@ class Setting extends Component {
     }
 
     async parse(message, args, reset) {
-        if(reset) return await this.reset(message);
+        if(reset) {
+            const key = this.resolve === 'GUILD' ? message.guild.id : message.author.id;
+            return await this.reset(key);
+        }
+        
         this.client.logger.error(`Setting ${this.resolveable} has no parsing function.`);
         return undefined;
     }
 
-    async set(key, value) {
+    async set(key, value, opts) {
         let response = null;
         if(typeof value === 'string' || typeof value === 'boolean') {
             response = {
@@ -52,22 +56,30 @@ class Setting extends Component {
                 [this.index]: value
             };
         }
-        await this.client.storageManager.tables[this._table].sync(key, response);
+        await this.client.storageManager.tables[this._table].sync(key, response, opts ? opts : { replace: true });
+        return response;
     }
 
-    async reset(message) {
-        const key = this.resolve === 'GUILD' ? message.guild.id : message.author.id;
-        await this.client.storageManager.tables[this._table].sync(key, {
-            [this.index]: {
-                value: this.default
-            }
-        });
-        await message.respond(`Successfully reset the setting **${this.name}** to \`${this.default}\`.`, {
-            emoji: 'success'
-        });
-        return { ignore: true };
+    async reset(key) {
+        // const key = this.resolve === 'GUILD' ? message.guild.id : message.author.id;
+        const def = this.default;
+        let response = null;
+        if(typeof def === 'string' || typeof def === 'boolean' || def === null) {
+            response = {
+                [this.index]: {
+                    value: def
+                }
+            };
+        } else {
+            response = {
+                [this.index]: def
+            };
+        }
+        await this.client.storageManager.tables[this._table].sync(key, response, { replace: true });
+        const val = typeof this.default === 'object' ? (this.default ? this.default.value : null || 'N/A') : this.default;
+        return { ignore: true, result: val };
     }
-    
+
     reason(msg) {
         return `[${this.resolveable}] Executed by ${msg.author.tag}.`;
     }
@@ -81,6 +93,12 @@ class Setting extends Component {
         return settings.value;
     }
 
+    parent(key) {
+        return this.resolve === 'GUILD' 
+            ? this.client.guilds.get(key)
+            : this.client.users.get(key);
+    }
+    
 }
 
 module.exports = Setting;

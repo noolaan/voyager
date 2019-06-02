@@ -29,18 +29,20 @@ class Guilds extends Table {
         return this;
     }
 
-    async sync(key, data) {
-        if(!this.client.guilds.has(key)) await this.client.guilds.fetch(key);
+    async sync(key, data, { replace = false, concat = true }) {
+        if(!this.client.guilds.has(key)) await this.client.guilds.resolveID(key);
         const guild = this.client.guilds.get(key);
 
-
-        let settings = await guild.settings();
-        settings = { 
-            ...settings,
-            ...data
-        };
+        let settings = data;
+        if(concat) {
+            const guildSettings = await guild.settings();
+            settings = { 
+                ...guildSettings,
+                ...data
+            };
+        }
         guild._settings = settings;
-        return await this.update(key, { settings });
+        return await this[replace ? 'replace' : 'update'](key, { settings });
     }
 
     async grab(guild) {
@@ -68,6 +70,17 @@ class Guilds extends Table {
         this._log(`Deleted guild: ${guild.name} (${guild.id})`);
         await this.delete(guild.id);
         return guild.id;
+    }
+
+    async _removeAllKeys(key) {
+        for(let [ id, guild ] of this.client.guilds.filter(g=>g.id === "187017643448991745").entries()) {
+            guild = await this.grab(guild);
+            if(guild[key] || guild[key] === null) {
+                delete guild[key];
+            }
+            await this.sync(id, guild, { replace: true, concat: false });
+            //]eval this.client.storageManager.tables.guilds._removeAllKeys("stickyRole")
+        }
     }
 
     _createDefault() {

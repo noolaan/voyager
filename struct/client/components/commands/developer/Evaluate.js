@@ -4,6 +4,7 @@ const emojis = require('../../../../../util/emojis.json');
 const { inspect } = require('util');
 const { username } = require('os').userInfo();
 
+
 let storage = null; //eslint-disable-line no-unused-vars
 
 class EvaluateCommand extends Command {

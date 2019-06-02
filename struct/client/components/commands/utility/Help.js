@@ -35,7 +35,7 @@ class Help extends Command {
 
     }
 
-    async _displayComponent(message, args, settings) {
+    async _displayComponent(message, args) {
         
         const component = this.client._resolver.components(args, 'command', false)[0];
         if(!component) {
@@ -44,7 +44,7 @@ class Help extends Command {
 
         const fields = [];
         const prefix = message.guild
-            ? settings.guild.prefix.value
+            ? message.guild._getSetting('prefix').value
             : this.client._options.bot.prefix;
 
         if(component.examples.length > 0) fields.push({
@@ -82,7 +82,7 @@ class Help extends Command {
     async _displayAll(message, settings, all) {
 
         const prefix = message.guild
-            ? settings.guild.prefix.value
+            ? message.guild._getSetting('prefix').value
             : this.client._options.bot.prefix;
 
         const fields = [];

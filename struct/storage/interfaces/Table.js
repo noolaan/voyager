@@ -66,6 +66,15 @@ class Table {
         }
     }
 
+    async replace(key, data) {
+        try {
+            const available = await this.get(key);
+            return available ? await this._index.get(key).replace({ id: key, ...data }) : null;
+        } catch(error) {
+            this._error(error);
+        }
+    }
+
     async clear() {
         try {
             this._log("Cleared.");

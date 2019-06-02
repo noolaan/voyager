@@ -1,24 +1,22 @@
 const { Setting } = require('../../../interfaces/');
 const emojis = require('../../../../../util/emojis.json');
 
-class AttachmentCache extends Setting {
+class DmInfraction extends Setting {
 
     constructor(client) {
 
         super(client, {
-            name: 'attachmentCache',
-            module: 'utility',
-            description: "Toggle automatic attachment caching from your messages. This can only be utilized in premium servers, and would allow your deleted images to be logged.",
-            resolve: 'USER',
-            default: {
-                value: true
-            }
+            name: 'dmInfraction',
+            module: 'moderation',
+            description: "Determines whether or not infractions will be sent to the target's direct messages.",
+            resolve: 'GUILD',
+            default: false
         });
 
     }
 
     async parse(message, args) {
-        if(args === this.default) return await super.reset(message.author.id);
+        if(args === this.default) return await super.reset(message.guild.id);
         const bool = this.client._resolver.boolean(args);
         if(bool === undefined) {
             return {
@@ -26,7 +24,7 @@ class AttachmentCache extends Setting {
                 message: `You must provide a boolean value. *(true|false)*`
             };
         }
-        await super.set(message.author.id, bool);
+        await super.set(message.guild.id, bool);
         return { error: false, result: bool };
     }
 
@@ -38,11 +36,11 @@ class AttachmentCache extends Setting {
             }
         ];
     }
-    
+
     current(guild) {
         return guild._getSetting(this.index).value;
     }
-    
+
 }
 
-module.exports = AttachmentCache;
+module.exports = DmInfraction;

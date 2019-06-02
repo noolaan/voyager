@@ -16,7 +16,7 @@ class Prefix extends Setting {
     }
 
     async parse(message, args) {
-        if(args === this.default) return await super.reset(message);
+        if(args === this.default) return await super.reset(message.guild.id);
         if(args.length > MaxCharacters) return { 
             error: true,
             message: `Your guild prefix must be less than ${MaxCharacters} characters.`
@@ -30,17 +30,17 @@ class Prefix extends Setting {
         return { error: false, result: args };
     }
 
-    fields(index) {
+    fields(guild) {
         return [
             {
                 name: '》Prefix',
-                value: `\`${this.current(index)}\``
+                value: `\`${this.current(guild)}\``
             }
         ];
     }
 
-    current(settings) {
-        return settings.value;
+    current(guild) {
+        return guild._getSetting(this.index).value;
     }
 
 }

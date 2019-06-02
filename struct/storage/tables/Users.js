@@ -29,17 +29,20 @@ class Users extends Table {
         return this;
     }
 
-    async sync(key, data) {
-        if(!this.client.users.has(key)) await this.client.users.fetch(key);
+    async sync(key, data, { replace = false, concat = true }) {
+        if(!this.client.users.has(key)) await this.client.users.resolveID(key);
         const user = this.client.users.get(key);
 
-        let settings = user.settings();
-        settings = {
-            ...settings,
-            ...data
-        };
+        let settings = data;
+        if(concat) {
+            const userSettings = await user.settings();
+            settings = { 
+                ...userSettings,
+                ...data
+            };
+        }
         user._settings = settings;
-        return await this.update(key, { settings });
+        return await this[replace ? 'replace' : 'update'](key, { settings });
     }
 
     async grab(user) {
@@ -74,9 +77,10 @@ class Users extends Table {
         const def = {};
         for(const setting of settings.values()) {
             if(setting.default !== null) {
-                def[setting.index] = {
-                    value: setting.default
-                };
+                const value = typeof setting.default === 'object' 
+                    ? setting.default 
+                    : { value: setting.default };
+                def[setting.index] = value;
             }
         }
         return def;

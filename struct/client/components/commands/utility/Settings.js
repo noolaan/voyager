@@ -43,7 +43,7 @@ class Settings extends Command {
 
     async execute(message, { flags, args, settings }) {
         
-        const types = ['list', 'view', 'set', 'reset'];
+        const types = ['list', 'view', 'set', 'reset', 'help'];
         const type = args[0] ? args[0].toLowerCase() : 'list';
 
         if(!types.includes(type)) {
@@ -52,9 +52,7 @@ class Settings extends Command {
             });
         }
 
-        const prefix = message.guild
-            ? settings.guild.prefix.value 
-            : this.client._options.bot.prefix;
+        const prefix = message.guild.prefix;
 
         if(type === 'list') {
             const embed = this._settingsEmbed(message, flags.user ? 'USER' : 'GUILD', settings, flags.all);
@@ -79,7 +77,7 @@ class Settings extends Command {
             }
             
             if(type === 'view') {
-                const embed = this._settingEmbed(message, setting, settings);
+                const embed = this._settingEmbed(message, setting);
                 return message.respond(embed);
             } else {
                 if(!message.guild && setting.resolve === 'GUILD') {
@@ -111,7 +109,13 @@ class Settings extends Command {
                         });
                     }
                 } else if(type === 'reset') {
-                    return await setting.reset(message, settings);
+                    const key = setting.resolve === 'GUILD' ? message.guild.id : message.author.id;
+                    await setting.reset(key);
+                    return message.respond(`Successfully reset the setting **${setting.name}**.`, {
+                        emoji: 'failure'
+                    });
+                } else if(type === 'help') {
+                    //meme
                 }
             }
 
@@ -123,9 +127,7 @@ class Settings extends Command {
 
         if(!message.guild && type === 'GUILD') type = 'USER';
 
-        const prefix = message.guild 
-            ? settings.guild.prefix.value
-            : this.client._options.bot.prefix;
+        const prefix = message.guild.prefix;
 
         let fields = [];
         const sorted = this.client.registry.components
@@ -166,17 +168,9 @@ class Settings extends Command {
 
     }
 
-    _settingEmbed(message, setting, { guild, user }) {
+    _settingEmbed(message, setting) {
 
-        const index = setting.resolve === 'GUILD'
-            ? guild[setting.name]
-            : user[setting.name];
-
-        if(!index) {
-            //throw some error
-        }
-
-        const fields = setting.fields(index);
+        const fields = setting.fields(setting.resolve === 'GUILD' ? message.guild : message.author);
 
         return {
             embed: {

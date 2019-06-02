@@ -69,12 +69,12 @@ class CommandHandler extends Observer {
 
     }
 
-    async _getCommandPattern(guild, settings) {
+    async _getCommandPattern(guild) {
 
-        const createCommandPattern = (guild = null, settings = null) => {
+        const createCommandPattern = (guild = null) => {
 
             const prefix = guild
-                ? settings.prefix.value
+                ? guild._getSetting('prefix').value 
                 : this.client._options.bot.prefix;
 
             const escapedPrefix = escapeRegex(prefix);
@@ -94,14 +94,15 @@ class CommandHandler extends Observer {
 
         if(commandPattern) {
             //if this breaks, the "settings.prefix.value !== this.client._options.bot.prefix" was removed from the if statement.
+            const prefix = guild._getSetting('prefix').value;
             if(guild
-                && settings.prefix
-                && commandPattern.prefix !== settings.prefix.value
+                && prefix
+                && commandPattern.prefix !== prefix
             ) {
-                commandPattern = createCommandPattern(guild, settings);
+                commandPattern = createCommandPattern(guild);
             }
         } else {
-            commandPattern = createCommandPattern(guild, settings);
+            commandPattern = createCommandPattern(guild);
         }
 
         return commandPattern.pattern;
@@ -272,6 +273,7 @@ class CommandHandler extends Observer {
         const flagExpansions = this._flagExpansions(command.flags);
         const flags = {};
         const parameters = [];
+        const id = commandMessage.UUID;
 
         let flag;
 
@@ -282,9 +284,10 @@ class CommandHandler extends Observer {
             if(flagData && !isQuote && !flags[flagData.id]) {
                 flag = flagData;
                 flags[flag.id] = flag;
-            } else if(flag && flag.arguments) {
-                flag.query = word;
-                flag = null;
+            } else if((flag && flag.arguments) || (flag && flag.arguments && flag.continue)) {
+                if(flag.queries[id]) flag.queries[id] += ` ${word}`;
+                else flag.queries[id] = word;
+                if(!flag.continue) flag = null;
             } else {
                 const newWord = isQuote
                     ? `"${word}"`
@@ -299,8 +302,8 @@ class CommandHandler extends Observer {
 
     async _handleFlags(commandMessage, flags, parameters) {
 
-        for(const flag of Object.values(flags)) {
-            const response = await flag.parse(commandMessage);
+        for(let flag of Object.values(flags)) {
+            let response = await flag.parse(commandMessage);
             if(response.error) return response;
         }
 

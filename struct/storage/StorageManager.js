@@ -1,4 +1,4 @@
-const rethinkdb = require('rethinkdbdash')
+const rethinkdb = require('rethinkdbdash');
 
 class StorageManager {
 

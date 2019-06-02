@@ -1,25 +1,23 @@
 const { Setting } = require('../../../interfaces');
 const emojis = require('../../../../../util/emojis.json');
 const path = require('path');
-const { inspect } = require('util');
 
-class MessageLog extends Setting {
+class MemberLog extends Setting {
 
     constructor(client) {
 
         super(client, {
-            name: 'messageLog',
+            name: 'memberLog',
             module: 'moderation',
-            description: "Uploads deleted messages to a designated channel for logging. On a premium guild, it will also optionally log the images and videos with the message.",
+            description: "Logs whenever a member joins or leaves the server, primarily for moderation usage.",
             aliases: [
-                'messageLogs',
-                'msgLog',
-                'msgLogs'
+                'memberLogs',
+                'memLog',
+                'memLogs'
             ],
             resolve: 'GUILD',
             default: {
-                value: false,
-                images: false
+                value: false
             }
         });
 
@@ -30,49 +28,19 @@ class MessageLog extends Setting {
 
         const channel = this.client._resolver.channel(args, message.guild);
         if(!channel) {
-            if(args.toLowerCase().startsWith('images')) {
-                if(!message.guild._getSetting('premium').value ) {
-                    return {
-                        error: true,
-                        message: `Unable to configure image logs, only premium guilds can use this feature.`
-                    };
-                }
-                const [ ,value ] = args.toLowerCase().split(' ');
-                const boolean = this.client._resolver.boolean(value);
-                if(boolean === undefined) {
-                    return {
-                        error: true,
-                        message: `Unable to configure image logs, please supply a boolean value.`
-                    };
-                }
-                let newSettings = message.guild._getSetting(this.index); 
-                newSettings.images = boolean;
-                await super.set(message.guild.id, newSettings);
-                return {
-                    error: false,
-                    result: boolean,
-                    child: 'images'
-                };
-            } else {
-                return {
-                    error: true,
-                    message: `Unable to find a channel using those arguments, try again.`
-                };
-            }
-
+            return {
+                error: true,
+                message: `Unable to find a channel using those arguments, try again.`
+            };
         }
 
         let webhook;
         try {
-            await channel.edit({
-                nsfw: true
-            }, super.reason(message));
             webhook = await channel.createWebhook(this.client.user.username, {
                 avatar: path.join(process.cwd(), 'util', 'voyager.png'),
                 reason: super.reason(message)
             });
         } catch(err) {
-            this.client.logger.error(inspect(err));
             return { 
                 error: true,
                 message: `Unable to edit the channel, make sure I have the \`MANAGE_CHANNELS\` permission.`
@@ -83,7 +51,6 @@ class MessageLog extends Setting {
         await super.set(message.guild.id, {
             value: true,
             channel: channel.id,
-            images: message.guild._getSetting('premium').value,
             webhook: {
                 id: webhook.id,
                 token: webhook.token
@@ -95,7 +62,7 @@ class MessageLog extends Setting {
 
     async reset(key) {
         const index = super.parent(key);
-        const setting = index._getSetting(this.index);
+        const setting = index._getSetting(this.index); 
         if(setting.channel) {
             const channel = index.channels.get(index.channel);
             if(channel) {
@@ -124,11 +91,6 @@ class MessageLog extends Setting {
                 name: '》Channel',
                 value: `${channel ? `#${channel.name} \`(${channel.id})\`` : 'N/A'}`,
                 inline: true
-            },
-            {
-                name: '》Images',
-                value: `${this.current(guild).images ? `${emojis.enabled} Enabled` : `${emojis.disabled} Disabled`}`,
-                inline: true
             }
         ];
     }
@@ -137,11 +99,10 @@ class MessageLog extends Setting {
         const setting = guild._getSetting(this.index);
         return {
             value: setting.value,
-            channel: setting.channel,
-            images: setting.images
+            channel: setting.channel
         };
     }
     
 }
 
-module.exports = MessageLog;
+module.exports = MemberLog;

@@ -21,27 +21,38 @@ class Flag {
         this.type = opts.type || 'STRING';
         this.prompt = opts.prompt || null;
         this.default = opts.default || null;
+        this.continue = opts.continue || false;
+        this.func = opts.func || null;
 
-        //Miscellaneous
-        this.query = null;
+        this.queries = {};
 
     }
 
     async parse(commandMessage) {
+        
+        let query = this.queries[commandMessage.UUID];
 
         const type = Constants.Types[this.type];
-        if(!type) {
+        if(!type && !this.func) {
             return this._error('COMMAND', commandMessage);
         }
 
-        if(this.default && !this.query) this.query = this.default;
-        if(this.required && !this.query) return this._error('FLAG', commandMessage, { message: this.prompt ? this.prompt.start : Constants.Types[this.type].PROMPT.START });
+        if(this.func && !this.prompt) {
+            this.client.logger.warn(`Flag ${this.id} has no prompt!`);
+        }
 
-        const response = type.parse(this.query);
-        if(response instanceof Promise) await response;
+        if(this.default && !query) query = this.default;
+        if(this.required && !query) return this._error('FLAG', commandMessage, { message: this.prompt ? this.prompt.start : Constants.Types[this.type].prompt.start });
 
-        if(response.error) return this._error('FLAG', commandMessage, { message: this.prompt ? this.promp.retry : Constants.Types[this.type].PROMPT.RETRY });
-        this.query = response.output;
+        let response = this.func ? this.func(query, commandMessage.guild) : type.parse(query);
+        if(response instanceof Promise) response = await response;
+
+        if(response.error) return this._error('FLAG', commandMessage, { message: this.prompt ? this.prompt.retry : Constants.Types[this.type].prompt.retry });
+        if(response.result) {
+            query = response.result;
+        }
+
+        this.queries[commandMessage.UUID] = query;
 
         return { error: false };
 

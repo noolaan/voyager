@@ -3,26 +3,25 @@ const emojis = require('../../../../../util/emojis.json');
 const path = require('path');
 const { inspect } = require('util');
 
-class MessageLog extends Setting {
+class ModerationLog extends Setting {
 
     constructor(client) {
 
         super(client, {
-            name: 'messageLog',
+            name: 'moderationLog',
             module: 'moderation',
-            description: "Uploads deleted messages to a designated channel for logging. On a premium guild, it will also optionally log the images and videos with the message.",
+            description: "Logs moderation actions (bans, kicks, warns..) in a designated channel.",
             aliases: [
-                'messageLogs',
-                'msgLog',
-                'msgLogs'
+                'moderationLogs',
+                'modLog',
+                'modLogs'
             ],
             resolve: 'GUILD',
             default: {
                 value: false,
-                images: false
+                infractions: ['warn', 'mute', 'unmute', 'lockdown', 'unlockdown', 'kick', 'ban', 'unban', 'vcmute', 'vcunmute', 'vckick']
             }
         });
-
     }
 
     async parse(message, args) {
@@ -30,28 +29,27 @@ class MessageLog extends Setting {
 
         const channel = this.client._resolver.channel(args, message.guild);
         if(!channel) {
-            if(args.toLowerCase().startsWith('images')) {
-                if(!message.guild._getSetting('premium').value ) {
-                    return {
-                        error: true,
-                        message: `Unable to configure image logs, only premium guilds can use this feature.`
-                    };
+            if(args.toLowerCase().startsWith('infraction')) {
+                const list = this.client._resolver.list(message.guild._getSetting(this.index).infractions, Constants.Infractions, args.split(' ').splice(1));
+                if(!list || list.method === 'list') return {
+                    error: true,
+                    message: `Unable to parse list method, please use either \`add\` or \`remove\`.`
+                };
+                let newSettings = message.guild._getSetting(this.index);
+                newSettings.infractions = list.list;
+                if(list.method === 'add') {
+                    message.respond(`Successfully added \`[ ${list.changed.join(', ')} ]\` to **${this.name}:infractions**.`, {
+                        emoji: 'success'
+                    });
+                } else if(list.method === 'remove') {
+                    message.respond(`Successfully removed \`[ ${list.changed.join(', ')} ]\` from **${this.name}:infractions**.`, {
+                        emoji: 'success'
+                    });
                 }
-                const [ ,value ] = args.toLowerCase().split(' ');
-                const boolean = this.client._resolver.boolean(value);
-                if(boolean === undefined) {
-                    return {
-                        error: true,
-                        message: `Unable to configure image logs, please supply a boolean value.`
-                    };
-                }
-                let newSettings = message.guild._getSetting(this.index); 
-                newSettings.images = boolean;
                 await super.set(message.guild.id, newSettings);
                 return {
                     error: false,
-                    result: boolean,
-                    child: 'images'
+                    ignore: true
                 };
             } else {
                 return {
@@ -59,7 +57,6 @@ class MessageLog extends Setting {
                     message: `Unable to find a channel using those arguments, try again.`
                 };
             }
-
         }
 
         let webhook;
@@ -83,19 +80,19 @@ class MessageLog extends Setting {
         await super.set(message.guild.id, {
             value: true,
             channel: channel.id,
-            images: message.guild._getSetting('premium').value,
             webhook: {
                 id: webhook.id,
                 token: webhook.token
-            }
-        });
+            },
+            infractions: message.guild._getSetting('moderationLog').infractions
+        }, { replace: false });
         return { error: false, result: `#${channel.name}` };
 
     }
 
     async reset(key) {
         const index = super.parent(key);
-        const setting = index._getSetting(this.index);
+        const setting = index._getSetting(this.index); 
         if(setting.channel) {
             const channel = index.channels.get(index.channel);
             if(channel) {
@@ -126,8 +123,8 @@ class MessageLog extends Setting {
                 inline: true
             },
             {
-                name: '》Images',
-                value: `${this.current(guild).images ? `${emojis.enabled} Enabled` : `${emojis.disabled} Disabled`}`,
+                name: '》Loggable Infractions',
+                value: `${this.current(guild).infractions.length > 0 ? `${this.current(guild).infractions.map(i=>`\`${i}\``).join(', ')}` : 'N/A'}`,
                 inline: true
             }
         ];
@@ -138,10 +135,15 @@ class MessageLog extends Setting {
         return {
             value: setting.value,
             channel: setting.channel,
-            images: setting.images
+            infractions: setting.infractions
         };
     }
     
 }
 
-module.exports = MessageLog;
+module.exports = ModerationLog;
+
+//fucking hate my life
+const Constants = {
+    Infractions: ['note', 'warn', 'mute', 'unmute', 'lockdown', 'unlockdown', 'slowmode', 'kick', 'ban', 'unban', 'prune', 'vcmute', 'vcunmute', 'dehoist', 'addrole', 'removerole']
+};
