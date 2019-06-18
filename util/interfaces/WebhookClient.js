@@ -44,6 +44,9 @@ class VoyagerWebhookClient extends WebhookClient {
         } catch(error) {
             if(error.code === 10015) { //Unknown Webhook
                 this._destroy();
+            } else if(error.code === 50006) {
+                console.error('Tried sending an empty message', embs); //eslint-disable-line no-console
+                //debuging
             } else {
                 console.error(error); //eslint-disable-line no-console
             }

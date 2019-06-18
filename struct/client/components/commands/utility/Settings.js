@@ -1,6 +1,7 @@
 const { stripIndents } = require('common-tags');
 
 const { Command, Flag } = require('../../../interfaces/');
+const { inspect } = require('util');
 
 class Settings extends Command {
 
@@ -35,6 +36,10 @@ class Settings extends Command {
                 new Flag(client, {
                     name: 'all',
                     description: "View all settings."
+                }),
+                new Flag(client, {
+                    name: 'raw',
+                    description: "View a raw JSON file of all of your settings."
                 })
             ]
         });
@@ -45,6 +50,9 @@ class Settings extends Command {
         
         const types = ['list', 'view', 'set', 'reset', 'help'];
         const type = args[0] ? args[0].toLowerCase() : 'list';
+
+        if(flags.raw) return this._displayRaw(message, flags);
+    
 
         if(!types.includes(type)) {
             return message.respond(`Invalid action, use the arguments: ${types.map(t=>`\`${t}\``).join(', ')}.`, {
@@ -182,6 +190,27 @@ class Settings extends Command {
                 fields
             }
         };
+
+    }
+
+    _displayRaw(message, flags) {
+
+        const data = flags.user 
+            ? message.author._settings
+            : message.guild._settings;
+
+        const recurse = (directory) => {
+            for(const key of Object.keys(directory)) {
+                if(key === 'webhook') {
+                    delete directory[key];
+                } else if(typeof directory[key] === 'object') {
+                    recurse(directory[key]);
+                }
+            }
+            return directory;
+        };
+
+        return message.respond(`\`\`\`json\n${inspect(recurse(data))}\`\`\``);
 
     }
 

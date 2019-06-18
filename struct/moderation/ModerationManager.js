@@ -171,6 +171,8 @@ class ModerationManager {
             });
         }
 
+        if(!client) return undefined;
+
         const cache = this.client.registry.components.get("observer:messageCache").cache;
         const cachedMessage = cache.get(message.id);
         const attachments = cachedMessage ? cachedMessage.attachments : [];

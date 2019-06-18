@@ -61,6 +61,10 @@ class MessageLog extends Setting {
             }
 
         }
+        
+        if(message.guild._getSetting(this.index).channel) {
+            await this.reset(message.guild.id, true);
+        }
 
         let webhook;
         try {
@@ -93,22 +97,22 @@ class MessageLog extends Setting {
 
     }
 
-    async reset(key) {
+    async reset(key, ignore = false) {
         const index = super.parent(key);
         const setting = index._getSetting(this.index);
         if(setting.channel) {
-            const channel = index.channels.get(index.channel);
+            const channel = index.channels.resolve(setting.channel);
             if(channel) {
                 try {
                     const webhooks = await channel.fetchWebhooks();
-                    const webhook = webhooks.get(index.webhook.id);
-                    if(webhook) await webhook.delete(super.reason());
+                    const webhook = webhooks.get(setting.webhook.id);
+                    if(webhook) await webhook.delete();
                 } catch(err) {
                     //eslint-disable-line no-empty
                 }
             }
         }
-        return super.reset(key);
+        return super.reset(key, ignore);
     }
 
     fields(guild) {

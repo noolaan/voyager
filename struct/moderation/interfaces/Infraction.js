@@ -94,7 +94,7 @@ class Infraction {
                 setting
             });
             const response = await client._send(embed);
-            this.caseMessage = response.id;
+            if(response) this.caseMessage = response.id;
         }
 
     }

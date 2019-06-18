@@ -60,8 +60,9 @@ class Setting extends Component {
         return response;
     }
 
-    async reset(key) {
+    async reset(key, ignore = false) {
         // const key = this.resolve === 'GUILD' ? message.guild.id : message.author.id;
+        if(ignore) return undefined;
         const def = this.default;
         let response = null;
         if(typeof def === 'string' || typeof def === 'boolean' || def === null) {
@@ -95,8 +96,8 @@ class Setting extends Component {
 
     parent(key) {
         return this.resolve === 'GUILD' 
-            ? this.client.guilds.get(key)
-            : this.client.users.get(key);
+            ? this.client.guilds.resolve(key)
+            : this.client.users.resolve(key);
     }
     
 }

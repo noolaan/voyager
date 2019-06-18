@@ -1,9 +1,10 @@
 const { Command, Flag } = require('../../../interfaces/');
 const emojis = require('../../../../../util/emojis.json');
 
+const moment = require('moment-timezone'); //eslint-disable-line
+
 const { inspect } = require('util');
 const { username } = require('os').userInfo();
-
 
 let storage = null; //eslint-disable-line no-unused-vars
 
@@ -75,3 +76,18 @@ class EvaluateCommand extends Command {
 }
 
 module.exports = EvaluateCommand;
+
+/*
+const iDontFuckingCare = async (message) => { //eslint-disable-line
+    const channels = message.guild.channels
+        .filter(c=>c.type === 'text');
+    
+    for(const channel of channels.values()) {
+        const webhooks = await channel.fetchWebhooks();
+        for(const webhook of webhooks.values()) {
+            webhook.delete();
+        }
+    }
+
+};
+*/
