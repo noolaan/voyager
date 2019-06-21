@@ -2,6 +2,7 @@ const { stripIndents } = require('common-tags');
 
 const { MessageAttachment, WebhookClient } = require('discord.js');
 const Collection = require('../../util/interfaces/Collection.js');
+const Infraction = require('./interfaces/Infraction.js');
 
 class ModerationManager {
 
@@ -15,8 +16,13 @@ class ModerationManager {
         this.expirations = new Collection();
 
         this.client.hooker.hook('messageDelete', this._messageLog.bind(this));
+
         this.client.hooker.hook('guildMemberAdd', this._muteCheck.bind(this));
         this.client.hooker.hook('guildMemberAdd', this._joinLog.bind(this));
+        this.client.hooker.hook('guildMemberRemove', this._kickLog.bind(this));
+
+        this.client.hooker.hook('guildBanAdd', this._banLog.bind(this));
+        this.client.hooker.hook('guildBanRemove', this._unbanLog.bind(this));
 
     }
 
@@ -177,6 +183,9 @@ class ModerationManager {
         const cachedMessage = cache.get(message.id);
         const attachments = cachedMessage ? cachedMessage.attachments : [];
 
+        //join messages have no content ig
+        if(!cachedMessage || !cachedMessage.content) return undefined;
+
         const embed = {
             author: {
                 name: `${message.author.tag} (${message.author.id})`,
@@ -243,6 +252,8 @@ class ModerationManager {
 
     async _joinLog(member) {
         const guild = member.guild;
+
+        await guild.settings();
         const memberLog = guild._getSetting('memberLog');
 
         if(memberLog.value) {
@@ -267,6 +278,62 @@ class ModerationManager {
 
         }
 
+    }
+
+    async _banLog(guild, user) {
+        await guild.settings();
+        if(!guild._getSetting('moderationLog').value) return undefined;
+
+        const entry = await this._fetchFirstEntry(guild, user, 'MEMBER_BAN_ADD');
+        if(!entry) return undefined;
+
+        new Infraction(this.client, {
+            type: 'BAN',
+            targetType: 'user',
+            target: user,
+            executor: entry.executor,
+            reason: entry.reason || 'N/A',
+            color: 0xd65959,
+            guild
+        }).resolve();
+    }
+
+    async _unbanLog(guild, user) {
+        await guild.settings();
+        if(!guild._getSetting('moderationLog').value) return undefined;
+
+        const entry = await this._fetchFirstEntry(guild, user, 'MEMBER_BAN_REMOVE');
+        if(!entry) return undefined;
+
+        new Infraction(this.client, {
+            type: 'UNBAN',
+            targetType: 'user',
+            target: user,
+            executor: entry.executor,
+            reason: entry.reason || 'N/A',
+            color: 0xd97c7c,
+            guild
+        }).resolve();
+    }
+
+    async _kickLog(member) {
+        const guild = member.guild;
+
+        await guild.settings();
+        if(!guild._getSetting('moderationLog').value) return undefined;
+
+        const entry = await this._fetchFirstEntry(guild, member, 'MEMBER_KICK');
+        if(!entry) return undefined;
+
+        new Infraction(this.client, {
+            type: 'KICK',
+            targetType: 'user',
+            target: member.user,
+            executor: entry.executor,
+            reason: entry.reason || 'N/A',
+            color: 0xe8a96b,
+            guild
+        }).resolve();
     }
 
     /*
@@ -307,6 +374,20 @@ class ModerationManager {
         const client = this.webhooks.get(id);
         client.destroy();
         this.webhooks.delete(id);
+    }
+
+    async _fetchFirstEntry(guild, user, type) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const audit = await guild.fetchAuditLogs({ limit: 1 });
+
+        if(!audit || audit.entries.size === 0) return null;
+        // const entry = audit.entries.filter(e=>e.target.id === user.id).first();
+        const entry = audit.entries.first();
+        if(!entry || entry.executor.bot) return null;
+        if(entry.target.id !== user.id) return null;
+        if(entry.action !== type) return null;
+        
+        return entry;
     }
 
 }

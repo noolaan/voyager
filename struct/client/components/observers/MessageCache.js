@@ -46,7 +46,9 @@ class MessageCache extends Observer {
             : [];
 
         const data = {
-            id: message.id,
+            guildId: message.guild.id,
+            channelId: message.channel.id,
+            messageId: message.id,
             author: message.author.id,
             content: message.cleanContent,
             timestamp: new Date(),

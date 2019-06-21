@@ -4,6 +4,8 @@ const Util = require('../../../../../util/Util.js');
 const { stripIndents } = require('common-tags');
 const moment = require('moment');
 
+const MaxReasonCharacters = 80;
+
 class HistoryCommand extends Command {
 
     constructor(client) {
@@ -63,10 +65,12 @@ class HistoryCommand extends Command {
         const kicks = size('KICK');
         const bans = size('BAN');
 
+        const user = member.user ? member.user : member;
+
         return {
             author: {
-                name: `${member.user.tag} (${member.user.id})`,
-                icon_url: member.user.displayAvatarURL()
+                name: `${user.tag} (${user.id})`,
+                icon_url: user.displayAvatarURL()
             },
             color: 0xe0e0e0,
             footer: {
@@ -78,20 +82,29 @@ class HistoryCommand extends Command {
 
     async _verboseEmbed(member, infractions, page) {
 
+        const user = member.user ? member.user : member;
         const set = Util.paginate(infractions, page);
         let message = '';
+
+        const handleReason = (reason) => {
+            if(reason.length > MaxReasonCharacters) {
+                reason = `${reason.substring(0, MaxReasonCharacters-3)}...`;
+            }
+            reason = reason.replace(new RegExp('\\n', 'g'), ' ');
+            return reason;
+        };
         
         for(const item of set.items) {
             //const user = await this.client.users.fetch(item.executor, true);
-            message += `**${item.type}** by <@${item.executor}> (${moment(item.timestamp).fromNow()})
-        for \`${item.reason.length > 30 ? `${item.reason.substring(0, 27)}...` : item.reason}\`**\`[CASE ${item.case}]\`**`;
-            message += '\n';
+            message += stripIndents`**${item.type}** by <@${item.executor}> (${moment(item.timestamp).fromNow()})
+                for \`${handleReason(item.reason)}\`**\`[CASE ${item.case}]\`**`;
+            message += '\n\n';
         }
 
         return {
             author: {
-                name: `${member.user.tag} (${member.user.id})`,
-                icon_url: member.user.displayAvatarURL()
+                name: `${user.tag} (${user.id})`,
+                icon_url: user.displayAvatarURL()
             },
             description: message,
             color: 0xe0e0e0,
