@@ -54,16 +54,15 @@ class VoyagerWebhookClient extends WebhookClient {
 
     }
 
-    async _send(embed) {
-        let response;
-        
+    async _send(embed, files) {
+        let embeds = [];
+        if(embed) embeds = [ embed ];
         try {
-            response = await this.send("", { embeds: [ embed ]});
+            return await this.send("", { embeds, files });
         } catch(error) {
             if(error.code === 10015) this._destroy();
+            return null;
         }
-
-        return response;
     }
 
     async _destroy() {

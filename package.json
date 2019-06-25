@@ -6,7 +6,7 @@
     "duration-js": "^4.0.0",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.25",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "rethinkdbdash": "^2.3.31"

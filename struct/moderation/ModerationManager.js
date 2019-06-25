@@ -15,10 +15,11 @@ class ModerationManager {
         this.webhooks = new Collection();
         this.expirations = new Collection();
 
-        this.client.hooker.hook('messageDelete', this._messageLog.bind(this));
+        // this.client.hooker.hook('messageDelete', this._messageLog.bind(this));
 
         this.client.hooker.hook('guildMemberAdd', this._muteCheck.bind(this));
         this.client.hooker.hook('guildMemberAdd', this._joinLog.bind(this));
+        this.client.hooker.hook('guildMemberRemove', this._leaveLog.bind(this));
         this.client.hooker.hook('guildMemberRemove', this._kickLog.bind(this));
 
         this.client.hooker.hook('guildBanAdd', this._banLog.bind(this));
@@ -155,6 +156,8 @@ class ModerationManager {
         Event Handling 
                         */
 
+    /*
+
     async _messageLog(message) {
 
         if(!this.client._built
@@ -163,7 +166,6 @@ class ModerationManager {
             || (message.guild && !message.guild.available)) return undefined;
 
         await message.guild.settings();
-
 
         let client;
         const messageLog = message.guild._getSetting('messageLog');
@@ -184,7 +186,7 @@ class ModerationManager {
         const attachments = cachedMessage ? cachedMessage.attachments : [];
 
         //join messages have no content ig
-        if(!cachedMessage || !cachedMessage.content) return undefined;
+        if((!cachedMessage || (!cachedMessage.content && attachments.length === 0)) && !message.content) return undefined;
 
         const embed = {
             author: {
@@ -230,9 +232,10 @@ class ModerationManager {
         }
 
         client.queue(embed, uploadedFiles);
-        //await webhookClient.send("", options);
 
     }
+
+    */
 
     async _muteCheck(member) {
         const guild = member.guild;
@@ -257,14 +260,21 @@ class ModerationManager {
         const memberLog = guild._getSetting('memberLog');
 
         if(memberLog.value) {
-            const webhookClient = this._addWebhook(memberLog.webhook.id, memberLog.webhook.token);
+            const { id, token } = memberLog.webhook;
+            const setting = this.client.registry.components.get("setting:memberLog");
+            const client = this.client.webhookManager.grabClient(guild, {
+                id,
+                token,
+                setting
+            });
+
             const embed = {
                 author: {
                     name: `${member.user.tag} (${member.id})`,
                     icon_url: member.user.displayAvatarURL()
                 },
                 thumbnail: {
-                    url: member.user.displayAvatarURL({ size: 256 })
+                    url: member.user.displayAvatarURL({ size: 128 })
                 },
                 description: `<@${member.user.id}>`,
                 timestamp: new Date(),
@@ -274,7 +284,45 @@ class ModerationManager {
                 }
             };
 
-            await webhookClient.send("", { embeds: [ embed ] });
+            client.queue(embed);
+
+        }
+
+    }
+
+    async _leaveLog(member) {
+
+        const guild = member.guild;
+
+        await guild.settings();
+        const memberLog = guild._getSetting('memberLog');
+
+        if(memberLog.value) {
+            const { id, token } = memberLog.webhook;
+            const setting = this.client.registry.components.get("setting:memberLog");
+            const client = this.client.webhookManager.grabClient(guild, {
+                id,
+                token,
+                setting
+            });
+
+            const embed = {
+                author: {
+                    name: `${member.user.tag} (${member.id})`,
+                    icon_url: member.user.displayAvatarURL()
+                },
+                thumbnail: {
+                    url: member.user.displayAvatarURL({ size: 128 })
+                },
+                description: `<@${member.user.id}>`,
+                timestamp: new Date(),
+                color: 0xe56060,
+                footer: {
+                    text: "Member left"
+                }
+            };
+
+            client.queue(embed);
 
         }
 

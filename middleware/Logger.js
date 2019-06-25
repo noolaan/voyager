@@ -12,6 +12,7 @@ class Logger {
         });
 
         this.webhookClient = new WebhookClient(opts.webhook.id, opts.webhook.token);
+        this.webhookInfo = opts.webhook;
 
         this.client
             .on('shardCreate', (shard) => this.write(shard, "Shard created.", 'DEBUG'))
@@ -26,7 +27,7 @@ class Logger {
         const type = message.type || 'LOG';
 
         this.write(shard, message.message, type);
-        if(message.embed) {
+        if(message.embed && this.webhookInfo.id) {
             await this.webhookClient.send('', {
                 embeds: [
                     {

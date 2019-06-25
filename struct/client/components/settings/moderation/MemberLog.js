@@ -37,7 +37,7 @@ class MemberLog extends Setting {
         let webhook;
         try {
             webhook = await channel.createWebhook(this.client.user.username, {
-                avatar: path.join(process.cwd(), 'util', 'voyager.png'),
+                avatar: path.join(process.cwd(), 'util', `${this.client._options.storage.database}.png`),
                 reason: super.reason(message)
             });
         } catch(err) {

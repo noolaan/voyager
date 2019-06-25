@@ -99,6 +99,12 @@ class MessageCache extends Observer {
 
     }
 
+    _sweepCache() {
+
+        return this.cache;
+
+    }
+
 }
 
 module.exports = MessageCache;

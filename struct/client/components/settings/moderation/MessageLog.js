@@ -72,7 +72,7 @@ class MessageLog extends Setting {
                 nsfw: true
             }, super.reason(message));
             webhook = await channel.createWebhook(this.client.user.username, {
-                avatar: path.join(process.cwd(), 'util', 'voyager.png'),
+                avatar: path.join(process.cwd(), 'util', `${this.client._options.storage.database}.png`),
                 reason: super.reason(message)
             });
         } catch(err) {

@@ -10,7 +10,7 @@ class Prefix extends Setting {
             module: 'utility',
             description: "Changes the command prefix for your server.",
             resolve: 'GUILD',
-            default: ']'
+            default: client._options.bot.prefix
         });
 
     }

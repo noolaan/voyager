@@ -120,7 +120,7 @@ class Settings extends Command {
                     const key = setting.resolve === 'GUILD' ? message.guild.id : message.author.id;
                     await setting.reset(key);
                     return message.respond(`Successfully reset the setting **${setting.name}**.`, {
-                        emoji: 'failure'
+                        emoji: 'success'
                     });
                 } else if(type === 'help') {
                     //meme
