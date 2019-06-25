@@ -93,7 +93,7 @@ class MessageLogs extends Observer {
         const message = messages.first();
 
         await message.guild.settings();
-        const webhook = await this._grabWebhook(message);
+        const webhook = await this._grabWebhook(message, true);
         if(!webhook) return undefined;
 
         let embed = {
@@ -173,12 +173,14 @@ class MessageLogs extends Observer {
 
     }
 
-    async _grabWebhook(message) {
+    async _grabWebhook(message, shit = false) {
 
-        if(!this.client._built
-            || message.webhookID
-            || message.author.bot
-            || (message.guild && !message.guild.available)) return null;
+        if(!shit) {
+            if(!this.client._built
+                || message.webhookID
+                || message.author.bot
+                || (message.guild && !message.guild.available)) return null;
+        }
         
         await message.guild.settings();
 
