@@ -26,6 +26,7 @@ class Command extends Component {
         this.archivable = opts.archivable === undefined ? false : Boolean(opts.archivable);
         this.guildOnly = Boolean(opts.guildOnly);
         this.settings = opts.settings || [];
+        this.premium = Boolean(opts.premium);
 
         this.clientPermissions = opts.clientPermissions || [];
         this.memberPermissions = opts.memberPermissions || [];
