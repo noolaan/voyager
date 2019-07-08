@@ -27,6 +27,10 @@ class Infractions extends Table {
 
             for(const infraction of infractions) {
                 const guild = this.client.guilds.get(infraction.guild);
+                if(!guild) {
+                    await this.delete(infraction.id);
+                    continue;
+                }
                 await guild.settings();
                 this.client.moderationManager.handleExpiration(infraction);
             }

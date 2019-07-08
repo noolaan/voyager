@@ -1,21 +1,21 @@
 const { Command } = require('../../../interfaces/');
-const { Kick } = require('../../../../moderation/infractions/');
+const { Vckick } = require('../../../../moderation/infractions/');
 
-class KickCommand extends Command {
+class VcKick extends Command {
 
     constructor(client) {
 
         super(client, {
-            name: 'kick',
+            name: 'vckick',
             module: 'moderation',
-            description: "Kicks provided members.",
+            description: "Kicks provided members from the voice-channel.",
             usage: "<member..> [reason]",
             split: 'PLAIN',
             settings: ['guild'],
-            memberPermissions: ['KICK_MEMBERS'],
-            clientPermissions: ['KICK_MEMBERS'],
+            memberPermissions: ['MOVE_MEMBERS'],
+            clientPermissions: ['MOVE_MEMBERS'],
             examples: [
-                "@nolan#6801 @voyager#1512 breaking the rules"
+                "@nolan#6801 @voyager#1512 microphone spam"
             ],
             guildOnly: true
         });
@@ -34,13 +34,13 @@ class KickCommand extends Command {
         }
 
         return await this.client.moderationManager
-            .handleInfraction(Kick, message, { 
+            .handleInfraction(Vckick, message, { 
                 targets: members, 
-                parameters 
+                parameters,
             });
 
     }
 
 }
 
-module.exports = KickCommand;
+module.exports = VcKick;

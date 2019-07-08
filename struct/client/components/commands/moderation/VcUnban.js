@@ -1,23 +1,27 @@
 const { Command } = require('../../../interfaces/');
-const { Kick } = require('../../../../moderation/infractions/');
+const { Vcunban } = require('../../../../moderation/infractions/');
 
-class KickCommand extends Command {
+class VcUnbanCommand extends Command {
 
     constructor(client) {
 
         super(client, {
-            name: 'kick',
+            name: 'vcunban',
             module: 'moderation',
-            description: "Kicks provided members.",
+            description: "Unbans provided members from all voice-channels if their connection permission is denied.",
             usage: "<member..> [reason]",
             split: 'PLAIN',
             settings: ['guild'],
-            memberPermissions: ['KICK_MEMBERS'],
-            clientPermissions: ['KICK_MEMBERS'],
-            examples: [
-                "@nolan#6801 @voyager#1512 breaking the rules"
+            clientPermissions: ['MANAGE_CHANNELS'],
+            memberPermissions: ['MANAGE_CHANNELS'],
+            aliases: [
+                'unvcban'
             ],
-            guildOnly: true
+            examples: [
+                "@nolan#6801 @voyager#1512 they apologized"
+            ],
+            guildOnly: true,
+            premium: true
         });
 
         Object.defineProperty(this, 'client', { value: client });
@@ -34,13 +38,13 @@ class KickCommand extends Command {
         }
 
         return await this.client.moderationManager
-            .handleInfraction(Kick, message, { 
+            .handleInfraction(Vcunban, message, { 
                 targets: members, 
-                parameters 
+                parameters
             });
 
     }
 
 }
 
-module.exports = KickCommand;
+module.exports = VcUnbanCommand;

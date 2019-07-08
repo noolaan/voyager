@@ -145,7 +145,7 @@ class MessageLogs extends Observer {
         const webhook = await this._grabWebhook(oldMessage);
         if(!webhook) return undefined;
 
-        if(oldMessage.cleanContent === newMessage.cleanContent) return undefined;
+        if(oldMessage.cleanContent.toLowerCase() === newMessage.cleanContent.toLowerCase()) return undefined;
 
         const embed = {
             author: {

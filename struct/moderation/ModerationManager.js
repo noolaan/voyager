@@ -1,6 +1,6 @@
-const { stripIndents } = require('common-tags');
+// const { stripIndents } = require('common-tags');
+const { WebhookClient } = require('discord.js');
 
-const { MessageAttachment, WebhookClient } = require('discord.js');
 const Collection = require('../../util/interfaces/Collection.js');
 const Infraction = require('./interfaces/Infraction.js');
 
@@ -15,6 +15,12 @@ class ModerationManager {
         this.webhooks = new Collection();
         this.expirations = new Collection();
 
+        this.expirations2 = new Collection();
+
+        this.awaited = new Collection();
+        this.awaitedVcmutes = new Collection();
+        this.awaitedVcunmutes = new Collection();
+
         // this.client.hooker.hook('messageDelete', this._messageLog.bind(this));
 
         this.client.hooker.hook('guildMemberAdd', this._muteCheck.bind(this));
@@ -24,6 +30,9 @@ class ModerationManager {
 
         this.client.hooker.hook('guildBanAdd', this._banLog.bind(this));
         this.client.hooker.hook('guildBanRemove', this._unbanLog.bind(this));
+
+        //Vcmutes
+        this.client.hooker.hook('voiceStateUpdate', this._vcmuteCheck.bind(this));
 
     }
 
@@ -253,6 +262,17 @@ class ModerationManager {
         await infrac.infraction.resolve({ log: false });
     }
 
+    async _vcmuteCheck(oldState, newState) {
+        await newState.guild.settings();
+        if(!newState.guild._getSetting('premium').value) return undefined;
+
+        if(!oldState.channelID && newState.channelID) {
+            const expiration = this.expirations2.get(`${newState.guild.id}-${newState.member.id}`);
+            if(!expiration) return undefined;
+            this.client.storageManager.tables.expirations._removeExpiration(expiration, newState.guild);
+        }
+    }
+
     async _joinLog(member) {
         const guild = member.guild;
 
@@ -445,21 +465,25 @@ module.exports = ModerationManager;
 const Constants = {
     Infractions: {
         MUTE: require('../moderation/infractions/Mute.js'),
-        // VCMUTE: require('../moderation/infractions/Vcmute.js'),
+        VCMUTE: require('../moderation/infractions/Vcmute.js'),
         BAN: require('../moderation/infractions/Ban.js'),
         UNMUTE: require('../moderation/infractions/Unmute.js'),
-        // VCUNMUTE: require('../moderation/infractions/Vcunmute.js'),
+        VCUNMUTE: require('../moderation/infractions/Vcunmute.js'),
         UNBAN: require('../moderation/infractions/Unban.js'),
+        VCBAN: require('../moderation/infractions/Vcban.js'),
+        VCUNBAN: require('../moderation/infractions/Vcunban.js')
     },
     Resolves: {
         MUTE: 'UNMUTE',
         VCMUTE: 'VCUNMUTE',
-        BAN: 'UNBAN'
+        BAN: 'UNBAN',
+        VCBAN: 'VCUNBAN',
     },
     Unresolves: {
         UNMUTE: 'MUTE',
         VCUNMUTE: 'VCMUTE',
-        UNBAN: 'BAN'
+        UNBAN: 'BAN',
+        VCUNBAN: 'VCBAN'
     },
     MaxTargets: 5
 };

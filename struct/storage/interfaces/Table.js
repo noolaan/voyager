@@ -35,6 +35,14 @@ class Table {
         }
     }
 
+    async getAll() {
+        try {
+            return await this._index.run() || null;
+        } catch(error) {
+            this._error(error);
+        }
+    }
+
     async has(key) {
         return Boolean(await this.get(key));
     }

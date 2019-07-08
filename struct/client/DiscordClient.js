@@ -9,7 +9,7 @@ const WebhookManager = require('./WebhookManager.js');
 const { Command, Observer, Setting, Inhibitor } = require('./interfaces/');
 
 const StorageManager = require('../storage/StorageManager.js');
-const { Guilds, Users, Attachments, Infractions } = require('../storage/tables/');
+const { Guilds, Users, Attachments, Infractions, Expirations } = require('../storage/tables/');
 
 const ModerationManager = require('../moderation/ModerationManager.js');
 
@@ -57,7 +57,8 @@ class DiscordClient extends Client {
             ['guilds', Guilds],
             ['users', Users],
             ['attachments', Attachments],
-            ['infractions', Infractions]
+            ['infractions', Infractions],
+            ['expirations', Expirations]
         ]);
 
         await this.dispatcher.dispatch();
