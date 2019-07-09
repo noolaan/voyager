@@ -1,6 +1,5 @@
 const path = require('path');
 const request = require('request-promise');
-const { inspect } = require('util'); 
 
 const { Observer } = require('../../interfaces/');
 const Collection = require('../../../../util/interfaces/Collection.js');
@@ -86,9 +85,7 @@ class MessageCache extends Observer {
                     encoding: null
                 }).then((res) => {
                     buffer = res;
-                }).catch((error) => {
-                    this.client.logger.warn(`Error requesting attachment from ${message.author.tag} in #${message.channel.name} (${data.name}):\n${inspect(error.stack)}`);
-                    this.client.logger.error(error.stack || error);
+                }).catch((error) => { //eslint-disable-line no-unused-vars
                     return undefined;
                 });
             }

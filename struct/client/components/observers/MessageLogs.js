@@ -75,8 +75,9 @@ class MessageLogs extends Observer {
             if(files.length > 0) {
                 const attachmentWebhook = this.client.webhookManager.grabClient(message.guild, this.client._options.moderation.attachments.webhook);
                 const attachmentMessage = await attachmentWebhook._send(null, files);
-    
-                embed.description += `\n\n**${uploadedFiles ? 'Additional ' : ''}Attachment${files.length > 1 ? 's' : ''}:** ${attachmentMessage.attachments.map(a=>`[${a.filename}](${a.url})`).join(' ')}`;
+                if(attachmentMessage) {
+                    embed.description += `\n\n**${uploadedFiles ? 'Additional ' : ''}Attachment${files.length > 1 ? 's' : ''}:** ${attachmentMessage.attachments.map(a=>`[${a.filename}](${a.url})`).join(' ')}`;
+                }
             }
             const endTime = new Date().getTime();
             this.client.logger.debug(`Uploaded ${attachments.length} attachment${attachments.length > 1 ? 's' : ''}; took ${endTime-startTime}ms.`);
