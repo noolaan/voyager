@@ -1,5 +1,7 @@
 const { Table } = require('../interfaces/');
 
+const delay = 3600; //seconds
+
 class Attachments extends Table {
 
     constructor(client, opts = {}) {
@@ -19,6 +21,17 @@ class Attachments extends Table {
 
     async initialize() {
         return this;
+    }
+
+    async sweepCache() {
+        try {
+            const result = await this._index.filter((attachment) => {
+                return attachment("timestamp").sub(new Date().getTime()).lt(-1200000); //20 minutes in ms
+            }).delete().run();
+            this._log(`Cleared ${result.deleted} items from the cache.`);    
+        } catch(error) {
+            this._error(error);
+        }
     }
 
 }

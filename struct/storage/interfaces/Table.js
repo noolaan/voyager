@@ -85,8 +85,9 @@ class Table {
 
     async clear() {
         try {
-            this._log("Cleared.");
-            return await this._index.delete().run();
+            const result = await this._index.delete().run();
+            this._log(`Cleared ${result.deleted} items.`);
+            return result;
         } catch(error) {
             this._error(error);
         }
@@ -95,6 +96,18 @@ class Table {
     async amount() {
         try {
             return await this._index.count().run();
+        } catch(error) {
+            this._error(error);
+        }
+    }
+
+    async data() {
+        try {
+            return await this.r.db('rethinkdb')
+                .table('stats')
+                .filter({ db: this.name, table: this.index })
+                .map(doc => doc('storage_engine')('disk')('space_usage')('data_bytes').default(0))
+                .sum();
         } catch(error) {
             this._error(error);
         }

@@ -1,7 +1,7 @@
 const { MessageAttachment } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const moment = require('moment');
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 
 const { Observer } = require('../../interfaces/');
 const Util = require('../../../../util/Util.js');

@@ -5,6 +5,8 @@ const { inspect } = require('util');
 const { Observer } = require('../../interfaces/');
 const Collection = require('../../../../util/interfaces/Collection.js');
 
+const interval = 3600;
+
 class MessageCache extends Observer {
 
     constructor(client) {
@@ -22,6 +24,11 @@ class MessageCache extends Observer {
         this._extensions = ['.png', '.webp', '.jpg', '.jpeg', '.gif', '.mp3', '.mp4', '.mov', '.webm', '.wav', '.ogg', '.flac'];
     
         Object.defineProperty(this, 'client', { value: client });
+
+        setInterval(() => {
+            this.client.storageManager.tables.attachments.sweepCache();
+            this._sweepCache();
+        }, interval*1000);
 
     }
 
@@ -89,7 +96,7 @@ class MessageCache extends Observer {
             const attachmentId = new Date().getTime().toString(36);
             data.id = attachmentId;
             if(!buffer) this.client.logger.warn(`Unsaved attachment from ${message.author.tag} in #${message.channel.name} (${data.name}):\n${data}`);
-            await this.client.storageManager.tables.attachments.set(attachmentId, { buffer });
+            await this.client.storageManager.tables.attachments.set(attachmentId, { buffer, timestamp: beforeTime });
             attachments.push(data);
         }
 
@@ -100,9 +107,14 @@ class MessageCache extends Observer {
     }
 
     _sweepCache() {
-
-        return this.cache;
-
+        const ms = 1200000;
+        const filtered = this.cache.filter((message) => {
+            const time = new Date().getTime() - message.timestamp.getTime();
+            return time < ms;
+        });
+        this.client.logger.debug(`Trashed ${this.cache.size-filtered.size} items from messages cache.`);
+        this.cache = filtered;
+        return filtered;
     }
 
 }

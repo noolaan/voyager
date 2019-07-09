@@ -62,7 +62,7 @@ class DiscordClient extends Client {
         ]);
 
         await this.dispatcher.dispatch();
-        if(this.shard.id === 0) await this._singleton();
+        if(this.shard.ids[0] === 0) await this._singleton();
         await this.user.setActivity(`@${this.user.username} help`);
 
         this._built = true;

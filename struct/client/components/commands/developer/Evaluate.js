@@ -76,18 +76,3 @@ class EvaluateCommand extends Command {
 }
 
 module.exports = EvaluateCommand;
-
-/*
-const iDontFuckingCare = async (message) => { //eslint-disable-line
-    const channels = message.guild.channels
-        .filter(c=>c.type === 'text');
-    
-    for(const channel of channels.values()) {
-        const webhooks = await channel.fetchWebhooks();
-        for(const webhook of webhooks.values()) {
-            webhook.delete();
-        }
-    }
-
-};
-*/
