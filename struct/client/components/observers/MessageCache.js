@@ -104,7 +104,8 @@ class MessageCache extends Observer {
     }
 
     _sweepCache() {
-        const ms = 1200000;
+        // const ms = 1200000;
+        const ms = 15000;
         const filtered = this.cache.filter((message) => {
             const time = new Date().getTime() - message.timestamp.getTime();
             return time < ms;

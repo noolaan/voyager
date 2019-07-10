@@ -8,6 +8,7 @@ class Statistics extends Command {
             name: 'statistics',
             module: 'developer',
             description: "Shows statistics of the bot.",
+            restricted: true,
             aliases: [
                 'stats'
             ]

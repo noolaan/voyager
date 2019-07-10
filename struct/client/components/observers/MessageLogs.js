@@ -21,9 +21,6 @@ class MessageLogs extends Observer {
             ['messageUpdate', this.messageUpdate.bind(this)]
         ];
 
-        //this.cache
-        this._messageCache = null;
-
         Object.defineProperty(this, 'client', { 
             value: client 
         });
@@ -35,7 +32,9 @@ class MessageLogs extends Observer {
         const webhook = await this._grabWebhook(message);
         if(!webhook) return undefined;
 
-        const cachedMessage = this.cache.get(message.id);
+        const cache = this.client.registry.components.get("observer:messageCache").cache;
+
+        const cachedMessage = cache.get(message.id);
         const attachments = cachedMessage ? cachedMessage.attachments : [];
 
         if((!cachedMessage || (!cachedMessage.content && attachments.length === 0))
@@ -60,7 +59,9 @@ class MessageLogs extends Observer {
             const startTime = new Date().getTime();
             const files = [];
             for(const attachment of attachments) {
-                const buffer = (await this.client.storageManager.tables.attachments.get(attachment.id)).buffer;
+                const data = await this.client.storageManager.tables.attachments.get(attachment.id);
+                if(!data) continue;
+                const buffer = data.buffer;
                 const messageAttachment = new MessageAttachment(buffer, attachment.name);
                 if(imageExts.includes(attachment.extension) && uploadedFiles.length === 0) {
                     uploadedFiles = [ messageAttachment ];
@@ -75,9 +76,9 @@ class MessageLogs extends Observer {
             if(files.length > 0) {
                 const attachmentWebhook = this.client.webhookManager.grabClient(message.guild, this.client._options.moderation.attachments.webhook);
                 const attachmentMessage = await attachmentWebhook._send(null, files);
-                if(attachmentMessage) {
-                    embed.description += `\n\n**${uploadedFiles ? 'Additional ' : ''}Attachment${files.length > 1 ? 's' : ''}:** ${attachmentMessage.attachments.map(a=>`[${a.filename}](${a.url})`).join(' ')}`;
-                }
+                // if(attachmentMessage) {
+                embed.description += `\n\n**${uploadedFiles ? 'Additional ' : ''}Attachment${files.length > 1 ? 's' : ''}:** ${attachmentMessage.attachments.map(a=>`[${a.filename}](${a.url})`).join(' ')}`;
+                // }
             }
             const endTime = new Date().getTime();
             this.client.logger.debug(`Uploaded ${attachments.length} attachment${attachments.length > 1 ? 's' : ''}; took ${endTime-startTime}ms.`);
@@ -108,9 +109,10 @@ class MessageLogs extends Observer {
 
         let continued = "";
         const images = message.guild._getSetting('messageLog').images;
+        const cache = this.client.registry.components.get("observer:messageCache").cache;
 
         for(const message of messages.values()) {
-            const attachments = images ? await this._grabAttachments(this.cache.get(message.id)) : [];
+            const attachments = images ? await this._grabAttachments(cache.get(message.id)) : [];
             let text = stripIndents`**${Util.escapeMarkdown(message.author.tag)}** \`(${message.author.id})\` ***${moment(message.createdTimestamp).format("MM/DD hh:mm:ss")}***
                 ${Util.escapeMarkdown(message.cleanContent).replace(new RegExp('\\n', 'g'), ' ')}`;
             
@@ -176,6 +178,8 @@ class MessageLogs extends Observer {
 
     async _grabWebhook(message, shit = false) {
 
+        if(!this.client._built) return null;
+
         if(!shit) {
             if(!this.client._built
                 || message.webhookID
@@ -221,13 +225,6 @@ class MessageLogs extends Observer {
         const webhook = this.client.webhookManager.grabClient(message.guild, this.client._options.moderation.attachments.webhook);
         const attachmentMessage = await webhook._send(null, [ new MessageAttachment(Buffer.from(text), `log.txt`) ]);
         return attachmentMessage.attachments[0];
-    }
-    
-    get cache() {
-        if(!this._messageCache) {
-            this._messageCache = this.client.registry.components.get("observer:messageCache").cache;
-        }
-        return this._messageCache;
     }
 
 }

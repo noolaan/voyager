@@ -25,7 +25,6 @@ class ReloadCommand extends Command {
             return message.respond(`Failed to reload \`${response.length}\` components.`, { emoji: 'failure' });
         }
 
-
     }
 
 }
