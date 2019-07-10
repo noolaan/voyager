@@ -36,6 +36,8 @@ class VoyagerWebhookClient extends WebhookClient {
             embs.push(embed.embed);
         }
 
+        if(!files.length && !embs.length) return undefined;
+
         try {
             await this.send("", { 
                 embeds: embs,
