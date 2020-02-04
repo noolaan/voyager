@@ -1,3 +1,4 @@
+const options = require('../../options.json');
 const rethinkdb = require('rethinkdbdash');
 
 class StorageManager {
@@ -8,7 +9,14 @@ class StorageManager {
 
         this.r = new rethinkdb({
             silent: true,
-            log: m => this.client.logger.info(m)
+            log: m => this.client.logger.info(m),
+            servers: [
+                {
+                    host: options.storage.database.host,
+                    port: options.storage.database.port,
+                    password: options.storage.database.pass
+                }
+            ]
         });
 
         this.name = opts.name;

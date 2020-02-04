@@ -30,7 +30,7 @@ class DiscordClient extends Client {
 
         this.webhookManager = new WebhookManager(this);
         this.storageManager = new StorageManager(this, {
-            name: options.storage.database
+            name: options.storage.database.name
         });
 
         this.moderationManager = new ModerationManager(this);
